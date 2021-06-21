@@ -1,5 +1,7 @@
 # Configuration_Scripts-of-Hadoop-K8s-HAPROXY-over-AWS
 This project will help to automate manual work of configuration of K8s,Hadoop and HAPROXY Server.
+
+
 Project details:
 
 K8s Multi Node Cluster and Deployment of Multitier applicaton.
