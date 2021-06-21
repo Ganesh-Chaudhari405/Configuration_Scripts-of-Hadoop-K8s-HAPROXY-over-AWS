@@ -1,0 +1,13 @@
+---
+# tasks file for loadbal
+
+- package:
+          name: haproxy
+          state: present
+- template:
+     src: "/home/ganesh/task3/loadbal/files/haproxy.cfg"
+     dest: "/etc/haproxy/haproxy.cfg"
+- service:
+          name: haproxy
+          state: restarted
+

@@ -1,0 +1,172 @@
+- hosts: master
+  vars_files:
+          - vars.yml
+  tasks:
+  - name: "Namenode copying file of hotspot java"
+    copy:
+        src: "/jdk-8u171-linux-x64.rpm"
+        dest: "/"  
+  
+
+  - name: "Namenode checking java is present or not"
+    command:
+            "jps"
+    register: x 
+    ignore_errors: true    
+  
+  - name: "Namenode installing java"
+    command:
+            "rpm -i /jdk-8u171-linux-x64.rpm"
+            # ignore_errors: true 
+    when: x.failed== true             
+
+  - name: "Namenode copying file of hadoop"
+    copy:
+        src: "/hadoop-1.2.1-1.x86_64.rpm"   
+        dest: "/"
+        
+  - name: "Namenode Checking hadoop is present or not"
+    command:
+            "hadoop version"
+    register: y 
+    ignore_errors: true    
+
+  - name: "Namenode installing hadoop"
+    command:
+           "rpm -i /hadoop-1.2.1-1.x86_64.rpm --force"
+    when: x.failed== true     
+  - name: "create file for masternode"
+    file:
+            name: "{{dir}}"
+            state: directory  
+    register: z 
+   
+  - name: "Namenode configuration of hdfs-site.xml"
+    blockinfile:
+      path: "/etc/hadoop/hdfs-site.xml" 
+      insertafter: '<configuration>'
+      block: "<property>\n<name>dfs.name.dir</name>\n<value>{{dir}}</value>\n</property>"
+
+    
+  - name: "Namenode configuration of core-site.xml"
+    blockinfile:
+      path: "/etc/hadoop/core-site.xml"
+      insertafter: '<configuration>'
+      block: "<property>\n<name>fs.default.name</name>\n<value>hdfs://{{ansible_facts['default_ipv4']['address']}}:{{por}}</value>\n</property>"
+     
+    
+  - name: "Namenode formating directory"
+    command: 
+            "echo Y | hadoop namenode -format"
+    when: z.failed== true        
+  #- name: "Namenode checking hadoop service is running or not"
+               
+  - name: "Namenode start hadoop service" 
+    command:
+            "hadoop-daemon.sh stop namenode"
+  - name: "Namenode start hadoop service" 
+    command:
+            "hadoop-daemon.sh start namenode"              
+
+ 
+  - name: "Namenode rules"       
+    firewalld:
+          port: 50070/tcp
+          state: enabled
+          immediate: yes 
+
+
+  - name: "Namenode rules"       
+    firewalld:
+          port: 50010/tcp
+          state: enabled
+          immediate: yes         
+  - name: "Namenode rules"       
+    firewalld:
+          port: "{{por}}/tcp"
+          state: enabled
+          immediate: yes
+  - name: "namenode services"
+    command: "jps"
+    register: disp
+  - debug: 
+         var: disp
+
+    
+          
+- hosts: slave
+  vars_files:
+          - vars.yml
+  tasks:
+  - name: "Datanode copying file of hotspot java"
+    copy:
+        src: "/jdk-8u171-linux-x64.rpm"
+        dest: "/"  
+  
+
+  - name: "Datanode checking java is present or not"
+    command:
+            "jps"
+    register: x 
+    ignore_errors: true    
+  
+  - name: "Datanode installing java"
+    command:
+            "rpm -i /jdk-8u171-linux-x64.rpm"
+            # ignore_errors: true 
+    when: x.failed== true             
+
+  - name: "Datanode copying file of hadoop"
+    copy:
+        src: "/hadoop-1.2.1-1.x86_64.rpm"   
+        dest: "/"
+        
+  - name: "Datanode Checking hadoop is present or not"
+    command:
+            "hadoop version"
+    register: y 
+    ignore_errors: true    
+
+  - name: "Datanode installing hadoop"
+    command:
+           "rpm -i /hadoop-1.2.1-1.x86_64.rpm --force"
+    when: x.failed== true     
+  - name: "Datanode create file for datanode"
+    file:
+            name: "{{dir_data}}"
+            state: directory  
+    register: z 
+   
+  - name: "Datanode configuration of hdfs-site.xml"
+    blockinfile:
+      path: "/etc/hadoop/hdfs-site.xml" 
+      insertafter: '<configuration>'
+      block: "<property>\n<name>dfs.data.dir</name>\n<value>{{dir_data}}</value>\n</property>"
+
+    
+  - name: "Datanode configuration of core-site.xml"
+    blockinfile:
+      path: "/etc/hadoop/core-site.xml"
+      insertafter: '<configuration>'
+      block: "<property>\n<name>fs.default.name</name>\n<value>hdfs://{{IP}}:{{por}}</value>\n</property>"
+     
+
+  - name: "Datanode checking hadoop service is running or not"
+    shell:
+            "hadoop-daemon.sh stop datanode"
+  - name: "Datanode start hadoop service" 
+    command:
+            "hadoop-daemon.sh start datanode"     
+               
+  - name: "Datanode rule"
+    firewalld:
+          port: 50010/tcp
+          state: enabled
+          immediate: yes         
+  - name: "Datanode rules"       
+    firewalld:
+          port: "{{por}}/tcp"
+          state: enabled
+          immediate: yes
+
+

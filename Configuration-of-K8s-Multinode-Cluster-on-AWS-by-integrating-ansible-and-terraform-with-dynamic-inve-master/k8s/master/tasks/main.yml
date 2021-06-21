@@ -1,0 +1,85 @@
+---
+# tasks file for master
+- name: "yum configuration for kubeadm installation"
+  yum_repository:
+   name: Kubernetes
+   baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+   enabled: yes
+   description: "k8s repo"
+   gpgcheck: yes
+   repo_gpgcheck: yes
+   gpgkey: 
+   - https://packages.cloud.google.com/yum/doc/yum-key.gpg 
+   - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+- name: "installation of kubeadm,docker engine and iproute-tc"
+  package:
+   name: 
+   - kubeadm
+   - docker 
+   - iproute-tc 
+   state: latest
+- name: "changing docker default driver cgroup to systemd driver"
+  copy:
+    content: >
+            {
+             "exec-opts": ["native.cgroupdriver=systemd"]
+            }
+    dest: /etc/docker/daemon.json    
+- name: "start docker service"
+  service:
+       name: docker
+       state: started
+       enabled: true
+
+- name: "setting call-iptables to 1"
+  shell: "echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables"   
+  changed_when: false
+            
+- name: "pulling k8s master programs"
+  command: "kubeadm config images pull"
+  changed_when: false
+
+- name: "starting and enabling kubelete service"
+  package:
+      name: kubelet
+      state: started
+      enable: true 
+  ignore_errors: true  
+  failed_when: false
+
+- name: "kubernetes setup"
+  file:
+     path: /root/.kube
+     state: directory 
+- name: "for testing setup"
+  command: "cp /etc/kubernetes/admin.conf /root/.kube/config"    
+
+  ignore_errors: true 
+- name: "solving challeng of resources"
+  block:
+  - command: "kubeadm init"
+  rescue: 
+  - command: "kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=Mem --ignore-preflight-errors=NumCPU" 
+    ignore_errors: true
+  always:  
+    - name: "ceating tokens"
+      command: "kubeadm token create --print-join-command"
+      register: out
+    - file:
+       path: /cred
+       state: touch  
+    - name: "setting up CNI networking"
+      command: kubectl apply  -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+    - name: "used for templating token"  
+      template:
+            src: master/templates/cred.j2
+            dest: /cred.j2
+    - debug:
+         var: out.stdout 
+    - name: "fetching token to join slave node"     
+      fetch:
+          src: /cred.j2
+          dest: /k8s/
+          flat: yes
+

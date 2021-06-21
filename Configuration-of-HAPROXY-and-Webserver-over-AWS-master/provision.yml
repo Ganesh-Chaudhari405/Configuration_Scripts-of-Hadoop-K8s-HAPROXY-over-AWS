@@ -1,0 +1,43 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+           - key.yml
+  tasks: 
+  - name: provision of instance
+    ec2:    
+      key_name: ec2ganesh
+      instance_type: t2.micro
+      image: ami-098f16afa9edf40be
+      wait: yes
+      group_id: sg-b3315891
+      count: 3
+      state: present
+      instance_tags:
+            Name: webserver
+      vpc_subnet_id: subnet-3e17de1f
+      assign_public_ip: yes
+      region: us-east-1
+      aws_access_key: "{{accessk}}"
+      aws_secret_key: "{{secretk}}"
+
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+           - key.yml
+  tasks: 
+  - name: provision of instance
+    ec2:    
+      key_name: ec2ganesh
+      instance_type: t2.micro
+      image: ami-098f16afa9edf40be
+      wait: yes
+      group_id: sg-b3315891
+      count: 1
+      state: present
+      instance_tags:
+            Name: loadbal
+      assign_public_ip: yes
+      vpc_subnet_id: subnet-3e17de1f
+      region: us-east-1
+      aws_access_key: "{{accessk}}"
+      aws_secret_key: "{{secretk}}"

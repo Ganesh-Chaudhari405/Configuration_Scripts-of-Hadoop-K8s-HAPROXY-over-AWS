@@ -1,0 +1,5 @@
+dir: /master
+por: 9001
+dir_data: /slave
+IP: 192.168.225.203 
+

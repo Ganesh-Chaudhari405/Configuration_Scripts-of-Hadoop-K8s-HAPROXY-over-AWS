@@ -1,0 +1,51 @@
+---
+# tasks file for master
+- name: "yum configuration for kubeadm installation"
+  yum_repository:
+   name: Kubernetes
+   baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+   enabled: yes
+   description: "k8s repo"
+   gpgcheck: yes
+   repo_gpgcheck: yes
+   gpgkey: 
+   - https://packages.cloud.google.com/yum/doc/yum-key.gpg 
+   - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+- name: "installation of kubeadm,docker engine and iproute-tc"
+  package:
+   name: 
+   - kubeadm
+   - docker 
+   - iproute-tc 
+   state: latest
+- name: "changing docker default driver cgroup to systemd driver"
+  copy:
+    content: >
+            {
+             "exec-opts": ["native.cgroupdriver=systemd"]
+            }
+    dest: /etc/docker/daemon.json    
+- name: "start docker service"
+  service:
+       name: docker
+       state: started
+       enabled: true
+
+- name: "setting call-iptables to 1"
+  shell: "echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables"   
+  changed_when: false  
+            
+- name: "starting and enabling kubelete service"
+  service:
+      name: kubelet
+      state: started
+      enabled: true 
+  ignore_errors: true    
+- name: copying file
+  copy:
+   src: cred.j2
+   dest: /cred.sh 
+- name: "joining slave node to master node"
+  command: "bash /cred.sh"  
+

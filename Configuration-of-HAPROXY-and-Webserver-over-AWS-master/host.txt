@@ -1,0 +1,46 @@
+[loadbal]
+ 18.205.116.114
+  
+[server]
+ 18.233.98.243
+ 54.162.47.156
+ 3.87.212.136
+ 
+ #!/usr/bin/python3  
+import json  #ansible can understand easily
+
+try:
+    import boto3       #used to connect aws
+except Exception as e:
+    print("please check boto module is installed or not\n if not then use 'pip3 install boto3' ")
+    print(e)
+# we are getting IPs and appending in list
+def get_hosts(ec2_ob, fv):   
+    f={"Name":"tag:Name", "Values": [fv]}
+    hosts=[]
+
+    for each in ec2_ob.instances.filter(Filters=[f]):
+        hosts.append(each.public_ip_address)
+    return hosts
+
+
+
+
+def main():
+    ec2_ob=boto3.resource("ec2","ap-south-1")   #checking ec2 info in ap-south-1 region
+    
+    
+    loadb=get_hosts(ec2_ob, 'loadbal')   # sending tag like master o find public IP
+    servers=get_hosts(ec2_ob,'server')      
+    
+    
+    all_IPs={'load': loadbal,'server': servers }  # converting list into json so that ansible can understand
+    
+    print(json.dumps(all_IPs))      
+    
+
+
+if __name__=="__main__":
+    main()
+ 
+

@@ -1,0 +1,8 @@
+- hosts: server
+  # gather_facts: false
+  roles: 
+      - role: server
+- hosts: loadbal
+  #gather_facts: false
+  roles:
+          - role : loadbal 
