@@ -21,7 +21,7 @@ Deployment of HAPROXY Load Balancer and multiple webservers by integrating Ansib
 🔅 Configure web servers
 🔅 Configure HAPROXY load balancer with IP Addresses of servers
          
-#Technologies:
+# Technologies:
 LINUX
 ANSIBLE
 HADOOP
@@ -34,12 +34,12 @@ AWS
 
 To get Whole idea about project read articles of projects.
 
-#1. K8s configuration Over AWS
+# 1. K8s configuration Over AWS
     https://www.linkedin.com/posts/ganesh-cse_vimaldaga-righteducation-educationredefine-activity-6763770519926927360-qwCh
 
 
-#2. Hadoop Configuration Over AWS.
+# 2. Hadoop Configuration Over AWS.
     https://www.linkedin.com/posts/ganesh-cse_task-right-linuxworld-activity-6738780544957485056-t72n
     
-#3. HAPROXY 
+# 3. HAPROXY 
     https://www.linkedin.com/posts/ganesh-cse_linuxworld-righteducation-rightmentor-activity-6720309907377135616-buyN   
