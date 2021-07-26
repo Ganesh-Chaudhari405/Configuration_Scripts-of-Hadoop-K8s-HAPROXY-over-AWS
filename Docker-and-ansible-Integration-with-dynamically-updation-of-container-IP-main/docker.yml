@@ -1,0 +1,77 @@
+- hosts: dock
+  gather_facts: yes
+  vars:
+          - cname: "web4"
+          - iname: "cont"
+  tasks:
+  - name: "configuration of docker repository"
+    yum_repository:
+        name: docker_repo
+        description: docker_repository
+        baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+        gpgcheck: 0        
+  - name: "checking docker is install or not"
+    command: "rpm -q docker-ce"
+    register: x
+    ignore_errors: true
+
+  - name: "installing docker community edition"
+    command:
+          "yum install docker-ce --nobest -y"
+    when: x.failed== true      
+  
+  - name: "update iptables"
+    firewalld:
+     masquerade: yes
+     state: enabled
+     permanent: yes
+     port: 80/tcp
+     port: 443/tcp
+    ignore_errors: true  
+
+  - name: "starting docker service"
+    service:
+          name: docker
+          state: started
+          
+  - name: "installing python"
+    package:
+     name: "python36"
+     state: present
+  - name: "installing docker python library"   
+    pip:
+          name: docker.py
+          state: present
+
+  - name: copying dockerfile on managed node
+    copy:
+            src: "Dockerfile"
+            dest: "/dock/Dockerfile"
+  - name: creating image from dockerfile with ssh enabling
+    docker_image:
+        name: "{{iname}}"
+        build:
+          path: "/dock"
+        source: build
+    
+  - block:
+    - name: checking container is running or not  
+      command: "docker run -itd --name {{cname}} -p 8081:22 {{iname}}" 
+    rescue: 
+    - debug:
+            msg: "the containing is already running or change port number"
+  - command: "docker inspect {{cname}}"   
+    register: y 
+  - name: "taking ip of docker"
+    command: "docker inspect {{cname}}"   
+  - template:
+     src: "k.j2"  
+     dest: "/host.txt"    
+  - fetch:
+          src: "/host.txt"
+          dest: "host"
+          flat: yes 
+- hosts: localhost
+  tasks:  
+  - shell:
+     "cat /Arth/host>>/etc/hosts.txt" 

@@ -1,0 +1,10 @@
+- hosts: web
+  tasks:
+  - package:
+            name: httpd
+            state: present
+  - copy:
+     content: "ganesh chaudhari"
+     dest: /var/www/html/index.html
+  - name: starting the service
+    command: /usr/sbin/httpd    
